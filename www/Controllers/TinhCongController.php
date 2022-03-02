@@ -90,7 +90,9 @@ class TinhCongController extends Controller
 
     private function caculateWorkTime($time)
     {
-
+		$soCong = 0;
+		$thoiGianThieu = 0;
+		$workTime = 0;
 
         if ($time == null) {
             return null;
@@ -142,72 +144,125 @@ class TinhCongController extends Controller
         if (ctype_digit($startTime) && ctype_digit($endTime) && $startTime != $endTime) {
             // Part time morning
             if ($endTime < $startTime13h15) {
+                // 8h10 - 11h 
                 if ($startTime8h <= $startTime && $startTime < $startTime9h && $endTime < $startTime12h) {
-                    return $startTime12h - $startTime;
+                    $workTime = $startTime12h - $startTime;
+                    $soCong = 0.5;
+                    $thoiGianThieu = 4*60 - $workTime;
                 }
+                // 8h10 - 12h30
                 if ($startTime8h <= $startTime && $startTime < $startTime9h && $startTime12h <= $endTime) {
-                    return $endTime - $startTime;
+                    $workTime = $endTime - $startTime;
+                    $soCong = 0.5;
+                    $thoiGianThieu = 4*60 - $workTime;   
+
                 }
+                // 9h10 - 11h
                 if ($startTime >= $startTime9h && $endTime < $startTime12h) {
-                    return $startTime12h - $startTime;
+                    $workTime = $startTime12h - $startTime;
+                    $soCong = 0.5;
+                    $thoiGianThieu = 4*60 - $workTime;
                 }
+                // 9h10 - 12h30
                 if ($startTime >= $startTime9h && $startTime12h <= $endTime) {
-                    return $endTime - $startTime;;
+                    $workTime = $endTime - $startTime;
+                    $soCong = 0.5;
+                    $thoiGianThieu = 4*60 - $workTime;
                 }
+                return $soCong.' + '.$workTime.' + '.$thoiGianThieu;
             }
 
             // Part time afternoon
             if ($startTime >= $startTime13h15) {
+                // 14h - 17h
                 if ($startTime > $startTime13h15 && $endTime < $endTime17h30) {
-                    return $endTime - $startTime;
+                    return $workTime = $endTime - $startTime;
+                    $soCong = 0.5;
+                    $thoiGianThieu = 4*60 - $workTime;
                 }
+                // 14h - 18h
                 if ($startTime > $startTime13h15 && $endTime17h30 <= $endTime && $endTime <= $endTime19h) {
-                    return 4 * 60;
+                    $workTime = 4 * 60;
+                    $soCong = 0.5;
+                    $thoiGianThieu = 4*60 - $workTime;
                 }
+                // 13h - 17h
                 if ($startTime12h < $startTime && $startTime <= $startTime13h15 && $endTime < $endTime17h30) {
-                    return $endTime - $startTime;
+                    $workTime = $endTime - $startTime;
+                    $soCong = 0.5;
+                    $thoiGianThieu = 4*60 - $workTime;
                 }
+                // 13h - 18h
                 if ($startTime12h < $startTime && $startTime <= $startTime13h15 && $endTime17h30 <= $endTime && $endTime <= $endTime19h) {
-                    return $endTime - $startTime < 4 * 60 ? $endTime - $startTime : 4 * 60;
+                    $workTime = $endTime - $startTime < 4 * 60 ? $endTime - $startTime : 4 * 60;
+                    $soCong = 0.5;
+                    $thoiGianThieu = 4*60 - $workTime;
                 }
+                return $soCong.' + '.$workTime.' + '.$thoiGianThieu;
             }
 
             // Full time
             if ($endTime >= $startTime13h15 && $startTime < $startTime13h15) {
+                // 8h - 9h
                 if ($startTime8h <= $startTime && $startTime <= $startTime9h) {
+                    // 16h
                     if ($endTime < $endTime17h30) {
                         $workTime = $endTime - $startTime - $timeRelax;
                         if ($workTime > 4 * 60) {
-                            return $workTime;
+                            $workTime = $workTime;
+                            $soCong = 1;
+                            $thoiGianThieu = 8*60 - $workTime;
                         } else if ($workTime < 4 * 60) {
-                            return $workTime;
+                            $workTime = $workTime;
+                            $soCong = 0.5;
+                            $thoiGianThieu = 4*60 - $workTime;
                         } else {
-                            return 4 * 60;
+                            $workTime = 4 * 60;
+                            $soCong = 0.5;
+                            $thoiGianThieu = 0;
                         }
                     }
+                    // 19h
                     if ($endTime17h30 <= $endTime && $endTime <= $endTime19h) {
                         $workTime = $endTime - $startTime - $timeRelax;
                         if ($workTime > $startTime8h) {
-                            return $startTime8h;
+                            $workTime = $startTime8h;
+                            $soCong = 1;
+                            $thoiGianThieu = 0;
                         } else {
-                            return $workTime;
+                            $workTime = $workTime;
+                            $soCong = 1;
+                            $thoiGianThieu = 8*60 - $workTime;
                         }
                     }
+                    return $soCong.' + '.$workTime.' + '.$thoiGianThieu;
                 }
+                // 9h
                 if ($startTime9h < $startTime) {
+                    // 17h
                     if ($endTime < $endTime17h30) {
                         $workTime = $endTime - $startTime - $timeRelax;
                         if ($workTime > 4 * 60) {
-                            return $workTime;
+                            $workTime = $workTime;
+                            $soCong = 1;
+                            $thoiGianThieu = 8*60 - $workTime;
                         } else if ($workTime < 4 * 60) {
-                            return $workTime;
+                            $workTime = $workTime;
+                            $soCong = 0.5;
+                            $thoiGianThieu = 4*60 - $workTime;
                         } else {
-                            return 4 * 60;
+                            $workTime = 4 * 60;
+                            $soCong = 0.5;
+                            $thoiGianThieu = 0;
                         }
                     }
+                    // 18h
                     if ($endTime17h30 <= $endTime && $endTime <= $endTime19h) {
-                        return $endTime - $startTime - $timeRelax;
+                        $workTime = $endTime - $startTime - $timeRelax;
+                        $soCong = 1;
+                        $thoiGianThieu = 8*60 - $workTime;
                     }
+                    return $soCong.' + '.$workTime.' + '.$thoiGianThieu;
                 }
             }
         } else {
