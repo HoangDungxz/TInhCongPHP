@@ -12,9 +12,8 @@ class TinhCongController extends Controller
     private $dataWorkTimes = [];
     private $file_name;
     private $full_name;
-
-
-
+    private $tongSoCong = 0;
+    private $tongTimeThieu = 0;
 
     private $excelsController;
     public function __construct()
@@ -65,10 +64,19 @@ class TinhCongController extends Controller
         $file_name = $_SESSION['results']['file_name'];
         $full_name  = $_SESSION['results']['file_fullname'];
 
+        array_splice($dataWorkTimes[0], 3, 0, ["tsc" => "Tổng số công"]);
+        array_splice($dataWorkTimes[0], 3, 0, ["tsc" => "Tổng thời gian thiếu"]);
         foreach (array_slice($dataWorkTimes, 1) as $rowKey => $row) {
             foreach (array_slice($row, 3) as $itemKey => $item) {
                 $dataWorkTimes[$rowKey + 1][$itemKey + 3] = $this->caculateWorkTime($item);
             }
+
+            // chèn tổng số công
+            array_splice($dataWorkTimes[$rowKey + 1], 3, 0, ["tsc" => $this->tongSoCong]);
+            $this->tongSoCong = 0;
+            // chèn tổng thời gian thiếu
+            array_splice($dataWorkTimes[$rowKey + 1], 3, 0, ["tsc" => $this->tongTimeThieu]);
+            $this->tongTimeThieu = 0;
         }
 
 
@@ -90,9 +98,9 @@ class TinhCongController extends Controller
 
     private function caculateWorkTime($time)
     {
-		$soCong = 0;
-		$thoiGianThieu = 0;
-		$workTime = 0;
+        $soCong = 0;
+        $thoiGianThieu = 0;
+        $workTime = 0;
 
         if ($time == null) {
             return null;
@@ -148,28 +156,30 @@ class TinhCongController extends Controller
                 if ($startTime8h <= $startTime && $startTime < $startTime9h && $endTime < $startTime12h) {
                     $workTime = $startTime12h - $startTime;
                     $soCong = 0.5;
-                    $thoiGianThieu = 4*60 - $workTime;
+                    $thoiGianThieu = 4 * 60 - $workTime;
                 }
                 // 8h10 - 12h30
                 if ($startTime8h <= $startTime && $startTime < $startTime9h && $startTime12h <= $endTime) {
                     $workTime = $endTime - $startTime;
                     $soCong = 0.5;
-                    $thoiGianThieu = 4*60 - $workTime;   
-
+                    $thoiGianThieu = 4 * 60 - $workTime;
                 }
                 // 9h10 - 11h
                 if ($startTime >= $startTime9h && $endTime < $startTime12h) {
                     $workTime = $startTime12h - $startTime;
                     $soCong = 0.5;
-                    $thoiGianThieu = 4*60 - $workTime;
+                    $thoiGianThieu = 4 * 60 - $workTime;
                 }
                 // 9h10 - 12h30
                 if ($startTime >= $startTime9h && $startTime12h <= $endTime) {
                     $workTime = $endTime - $startTime;
                     $soCong = 0.5;
-                    $thoiGianThieu = 4*60 - $workTime;
+                    $thoiGianThieu = 4 * 60 - $workTime;
                 }
-                return $soCong.' + '.$workTime.' + '.$thoiGianThieu;
+                //tính tổng số công
+                $this->tongSoCong += $soCong;
+                //tinh tổng thời gian thiếu
+                return $soCong . ' + ' . $workTime . ' + ' . $thoiGianThieu;
             }
 
             // Part time afternoon
@@ -178,27 +188,30 @@ class TinhCongController extends Controller
                 if ($startTime > $startTime13h15 && $endTime < $endTime17h30) {
                     return $workTime = $endTime - $startTime;
                     $soCong = 0.5;
-                    $thoiGianThieu = 4*60 - $workTime;
+                    $thoiGianThieu = 4 * 60 - $workTime;
                 }
                 // 14h - 18h
                 if ($startTime > $startTime13h15 && $endTime17h30 <= $endTime && $endTime <= $endTime19h) {
                     $workTime = 4 * 60;
                     $soCong = 0.5;
-                    $thoiGianThieu = 4*60 - $workTime;
+                    $thoiGianThieu = 4 * 60 - $workTime;
                 }
                 // 13h - 17h
                 if ($startTime12h < $startTime && $startTime <= $startTime13h15 && $endTime < $endTime17h30) {
                     $workTime = $endTime - $startTime;
                     $soCong = 0.5;
-                    $thoiGianThieu = 4*60 - $workTime;
+                    $thoiGianThieu = 4 * 60 - $workTime;
                 }
                 // 13h - 18h
                 if ($startTime12h < $startTime && $startTime <= $startTime13h15 && $endTime17h30 <= $endTime && $endTime <= $endTime19h) {
                     $workTime = $endTime - $startTime < 4 * 60 ? $endTime - $startTime : 4 * 60;
                     $soCong = 0.5;
-                    $thoiGianThieu = 4*60 - $workTime;
+                    $thoiGianThieu = 4 * 60 - $workTime;
                 }
-                return $soCong.' + '.$workTime.' + '.$thoiGianThieu;
+                //tính tổng số công
+                $this->tongSoCong += $soCong;
+                $this->tongTimeThieu += $thoiGianThieu;
+                return $soCong . ' + ' . $workTime . ' + ' . $thoiGianThieu;
             }
 
             // Full time
@@ -211,11 +224,11 @@ class TinhCongController extends Controller
                         if ($workTime > 4 * 60) {
                             $workTime = $workTime;
                             $soCong = 1;
-                            $thoiGianThieu = 8*60 - $workTime;
+                            $thoiGianThieu = 8 * 60 - $workTime;
                         } else if ($workTime < 4 * 60) {
                             $workTime = $workTime;
                             $soCong = 0.5;
-                            $thoiGianThieu = 4*60 - $workTime;
+                            $thoiGianThieu = 4 * 60 - $workTime;
                         } else {
                             $workTime = 4 * 60;
                             $soCong = 0.5;
@@ -232,10 +245,14 @@ class TinhCongController extends Controller
                         } else {
                             $workTime = $workTime;
                             $soCong = 1;
-                            $thoiGianThieu = 8*60 - $workTime;
+                            $thoiGianThieu = 8 * 60 - $workTime;
                         }
                     }
-                    return $soCong.' + '.$workTime.' + '.$thoiGianThieu;
+                    //tính tổng số công
+                    $this->tongSoCong += $soCong;
+                    //tinh tổng thời gian thiếu
+                    $this->tongTimeThieu += $thoiGianThieu;
+                    return $soCong . ' + ' . $workTime . ' + ' . $thoiGianThieu;
                 }
                 // 9h
                 if ($startTime9h < $startTime) {
@@ -245,11 +262,11 @@ class TinhCongController extends Controller
                         if ($workTime > 4 * 60) {
                             $workTime = $workTime;
                             $soCong = 1;
-                            $thoiGianThieu = 8*60 - $workTime;
+                            $thoiGianThieu = 8 * 60 - $workTime;
                         } else if ($workTime < 4 * 60) {
                             $workTime = $workTime;
                             $soCong = 0.5;
-                            $thoiGianThieu = 4*60 - $workTime;
+                            $thoiGianThieu = 4 * 60 - $workTime;
                         } else {
                             $workTime = 4 * 60;
                             $soCong = 0.5;
@@ -260,9 +277,13 @@ class TinhCongController extends Controller
                     if ($endTime17h30 <= $endTime && $endTime <= $endTime19h) {
                         $workTime = $endTime - $startTime - $timeRelax;
                         $soCong = 1;
-                        $thoiGianThieu = 8*60 - $workTime;
+                        $thoiGianThieu = 8 * 60 - $workTime;
                     }
-                    return $soCong.' + '.$workTime.' + '.$thoiGianThieu;
+                    //tính tổng số công
+                    $this->tongSoCong += $soCong;
+                    //tinh tổng thời gian thiếu
+                    $this->tongTimeThieu += $thoiGianThieu;
+                    return $soCong . ' + ' . $workTime . ' + ' . $thoiGianThieu;
                 }
             }
         } else {
