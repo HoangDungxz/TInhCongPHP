@@ -279,7 +279,6 @@
         });
 
         $('#navbar_menu_btn').click(function() {
-
             $.ajax({
                 url: './index.php?controller=Excels&action=menu', // <-- point to server-side PHP script 
                 dataType: 'text', // <-- what to expect back from the PHP script, if anything
@@ -297,22 +296,6 @@
         $('.menu-close-action').on('click', function() {
             $('#menu_bar').animate({
                 width: 'hide'
-            });
-        });
-
-        $('#navbar_menu_btn').click(function() {
-
-            $.ajax({
-                url: './index.php?controller=Excels&action=menu', // <-- point to server-side PHP script 
-                dataType: 'text', // <-- what to expect back from the PHP script, if anything
-                type: 'post',
-                success: function(php_script_response) {
-                    $('#menu_bar_main').html(php_script_response);
-                    $('#menu_bar').animate({
-                        width: 'toggle'
-                    });
-                    // $('.navbar').toggleClass('menu-close-action');
-                }
             });
         });
     </script>
